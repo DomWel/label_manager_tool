@@ -7,7 +7,7 @@ from PIL import Image
 import vtkplotlib as vpl
 # Project files
 import vtk_actors
-from helper_functions import getLabelColor, computeCamPos
+from helper_functions import getLabelColor, computeCamPos, getEmptyImage
 from data_class import project_data
 from export_dataset import exportLandmarkDataset, exportMaskDatasetAsNumpyArray, exportTextLabelDataset
 
@@ -63,6 +63,12 @@ def createProj(self):
     updateComboboxPredefLabels(self.parent)
     showButtons(self.parent)
     updateAddLabelButton(self.parent)
+    
+    empty_img = getEmptyImage()
+    self.parent.renderWindow.SetInputData(empty_img)  
+    self.parent.iren.Initialize()
+    self.parent.iren.Start()  
+    
     self.close()
 
 def loadImageData(self):
@@ -253,6 +259,7 @@ def vtk_image_ops(self, vtk_image):
     self.img_spacing = vtk_image.GetSpacing()
     self.img_orig = vtk_image.GetOrigin()
     self.ren.GetActors().RemoveAllItems()
+    
     if self.project_data.data['label_type'] == 'Landmark label':
         cleanupActorsLandmarkLabel(self)
     if self.project_data.data['label_type'] == 'Mask label':
@@ -263,6 +270,7 @@ def vtk_image_ops(self, vtk_image):
     if self.project_data.data['label_type'] == 'Mask label' and \
         self.checkbox_plot_all_labels.isChecked():
         updateMaskLabels(self)
+        
     camera = self.ren.GetActiveCamera()
     camera_pos = computeCamPos(vtk_image.GetOrigin(), vtk_image.GetDimensions(), 
                   vtk_image.GetSpacing(), camera.GetViewAngle())
@@ -282,6 +290,9 @@ def getVTKImage(self, image):
             im = im.convert("L")
         vtk_image = vpl.image_io.as_vtkimagedata(im, ndim=None)
     return vtk_image
+
+
+    
 
 #### Update main window QT elements
 def showButtons(self):
@@ -579,7 +590,6 @@ def removeImageFromDataset(self):
     
     # Insert removed image into deleted image list. This way the removed images wont get 
     # re-uploaded when dataset is updated new images
-    print("Removed image: ", curr_img)
     self.project_data.data['deleted_images'].append(curr_img)
     
     next_img_name = self.project_data.getCurrImg()
