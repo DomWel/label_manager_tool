@@ -1,0 +1,7 @@
+matplotlib
+numpy 
+Pillow==8.4.0
+vtk==9.1.0
+vtkplotlib==1.5.1
+PyQT5
+
