@@ -10,7 +10,7 @@ import vtk_actors
 from helper_functions import getLabelColor, computeCamPos, getEmptyImage
 from data_class import project_data
 from export_dataset import exportLandmarkDataset, exportMaskDatasetAsNumpyArray, exportTextLabelDataset
-
+import time
 
 #### Button functions
 def exportDataset(self):
@@ -147,13 +147,13 @@ def showNextImage(self):
     self.project_data.data['img_counter'] = self.project_data.data['img_counter'] + 1        
     if self.project_data.data['img_counter'] >= len(self.project_data.data['img_list_ordered']):
         self.project_data.data['img_counter'] = 0     
-        
+    
     updateUINewImage(self)
     next_img_name = self.project_data.getCurrImg()
     vtk_image = getVTKImage(self, next_img_name)
     vtkChangeImageOperations(self, vtk_image)
-    
 
+    
 def showPreviousImage(self):
     self.project_data.data['img_counter'] = self.project_data.data['img_counter'] - 1        
     if self.project_data.data['img_counter'] < 0 :
@@ -371,25 +371,51 @@ def updateExistingLabelsList(self):
         # Set label id as private value
         item.value = label_dict['label_id']
         self.list_existing_labels.addItem(item)   
+           
 
 def updateUINewImage(self):
     # Set label section
+    tic1 = time.time()
     updateExistingLabelsList(self)
+    tic2 = time.time()
     updateImageTree(self)
+    tic3 = time.time()
     updateComboboxPredefLabels(self)
+    tic4 = time.time()
     updateGUIImageList(self)
+    
+    
+
+    
     # Set list item
     curr_img_name = self.project_data.data['img_list_ordered'][self.project_data.data['img_counter']]
+    """
     try: 
         items = self.list_img_names.findItems(curr_img_name, QtCore.Qt.MatchExactly)
         self.list_img_names.setCurrentItem( items[0] )
     except: 
         items = self.list_img_names.findItems("✘" + curr_img_name, QtCore.Qt.MatchExactly)
         self.list_img_names.setCurrentItem( items[0] )
+    """
+    tic5 = time.time()
+    self.list_img_names.setCurrentRow( self.project_data.data['img_counter'] )
+    
+    tic6 = time.time()
+    
     if curr_img_name in self.project_data.data["expert_review_list"]:
         self.checkbox_expert_review.setChecked(True)
     else: 
         self.checkbox_expert_review.setChecked(False)
+    
+    tic7 = time.time()
+    
+    print("UpdateExistingLabelList: ", tic2 - tic1)
+    print("updateImageTree: ", tic3 - tic2)
+    print("updateComboboxPredefLabels: ", tic4 - tic3)
+    print("updateGUIImageList: ", tic5 - tic4)
+    print("Set current row: ", tic6 - tic5)
+    print("Expert review: ", tic7 - tic6)
+    print("----------------------")
 
 def updateImageTree(self):
     items = []
