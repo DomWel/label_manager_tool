@@ -78,12 +78,12 @@ def loadImageData(self):
     img_list = self.project_data.getImageList()
     img_list = sorted(img_list) 
    
-    updateGUIImageList(self)
+    #updateGUIImageList(self)
 
     #render first image of img_list
     image_path = self.project_data.data['img_list_ordered'][0]
     vtk_image = getVTKImage(self, image_path)
-    vtk_image_ops(self, vtk_image)
+    vtkChangeImageOperations(self, vtk_image)
     
     # Change text of button
     self.button_choose_image_directory.setText("Update image data")
@@ -101,25 +101,23 @@ def addLabelToImage(self):
     else: 
         self.project_data.addLabel(label_combobox, img_name)
     
-    if self.project_data.data["label_type"] == "Mask label":
-        self.ren.RemoveActor(self.captionActor)
-        points = vtk.vtkPoints()
-        polydata = vtk.vtkPolyData()
-        polydata.SetPoints(points)
-        self.glyph2D.SetInputData(polydata)
-        self.glyph2D.Update()
-        self.landmark_pos = []
-        
+    self.landmark_pos = []
+
+    #Update GUI
     updateGUIImageList(self)
     updateUINewImage(self)
-    vtk_update_labels(self)
+    updateImageLabelsAfterLabelChange(self)
     
-def removeTextLabel(self):
+def removeImageLabel(self):
     label_id = self.list_existing_labels.currentItem().value
     img_name = self.project_data.getCurrImg()
     self.project_data.removeLabelById(img_name, label_id)
+    
+    #Update GUI
+    #updateGUIImageList(self)
     updateUINewImage(self)
-    vtk_update_labels(self)
+    updateImageLabelsAfterLabelChange(self)
+    
 
 def show_selected_img(self):
     curr_img_name = self.list_img_names.currentItem().text()
@@ -127,9 +125,10 @@ def show_selected_img(self):
     if "✘" in curr_img_name:
         curr_img_name = curr_img_name[1:]
 
-    vtk_image = getVTKImage(self, curr_img_name)
-    vtk_image_ops(self, vtk_image)
     updateUINewImage(self)
+    vtk_image = getVTKImage(self, curr_img_name)
+    vtkChangeImageOperations(self, vtk_image)
+    
     
 def expand_tree_side(self):
     self.tree.resizeColumnToContents(0)
@@ -138,28 +137,34 @@ def go_to_image(self):
     curr_img_name = self.tree.currentItem().text(0)
     curr_img_index = self.project_data.getImgIndex(curr_img_name)
     self.project_data.data['img_counter'] = curr_img_index
-    vtk_image = getVTKImage(self, curr_img_name)
-    vtk_image_ops(self, vtk_image)
+    
     updateUINewImage(self)
+    vtk_image = getVTKImage(self, curr_img_name)
+    vtkChangeImageOperations(self, vtk_image)
+    
    
 def showNextImage(self):    
     self.project_data.data['img_counter'] = self.project_data.data['img_counter'] + 1        
     if self.project_data.data['img_counter'] >= len(self.project_data.data['img_list_ordered']):
-        self.project_data.data['img_counter'] = 0           
+        self.project_data.data['img_counter'] = 0     
+        
+    updateUINewImage(self)
     next_img_name = self.project_data.getCurrImg()
     vtk_image = getVTKImage(self, next_img_name)
-    vtk_image_ops(self, vtk_image)
-    updateUINewImage(self)
+    vtkChangeImageOperations(self, vtk_image)
+    
 
 def showPreviousImage(self):
     self.project_data.data['img_counter'] = self.project_data.data['img_counter'] - 1        
     if self.project_data.data['img_counter'] < 0 :
-        self.project_data.data['img_counter'] = len(self.project_data.data['img_list_ordered'])-1          
+        self.project_data.data['img_counter'] = len(self.project_data.data['img_list_ordered'])-1 
+
+    updateUINewImage(self)         
     prev_img_name = self.project_data.getCurrImg()        
     vtk_image = getVTKImage(self, prev_img_name)
-    vtk_image_ops(self, vtk_image)
-    vtk_image_ops(self, vtk_image)
-    updateUINewImage(self)
+    vtkChangeImageOperations(self, vtk_image)
+    vtkChangeImageOperations(self, vtk_image)
+    
 
 def predef_label_changed(self):
     label_combobox = self.combobox_label_selection.currentText()
@@ -197,6 +202,7 @@ def initActorsMaskLabel(self):
     self.landmark_pos = []
 
 def cleanupActorsMaskLabel(self):
+    
     self.ren.RemoveActor(self.captionActor)
     self.ren.RemoveActor(self.current_line_actor)
     self.ren.RemoveActor(self.current_glyph_actor)
@@ -214,7 +220,7 @@ def cleanupActorsLandmarkLabel(self):
     for caption_actor in self.captionActors:
         self.ren.RemoveActor(caption_actor)
 
-def updateLandmarkLabels(self):
+def updateExistingLandmarkLabels(self):
     img_name = self.project_data.getCurrImg()
     label_list = self.project_data.getLabelList(img_name)
     font_size = self.project_data.data['label_captions_font_size']
@@ -229,21 +235,26 @@ def updateLandmarkLabels(self):
     self.iren.Initialize()
     self.iren.Start()  
 
-def vtk_update_labels(self):
+def updateImageLabelsAfterLabelChange(self):
     # Clean up
     if self.project_data.data['label_type'] == 'Mask label': 
         cleanupActorsMaskLabel(self)
     if self.project_data.data['label_type'] == 'Landmark label':
         cleanupActorsLandmarkLabel(self)
-    if self.checkbox_plot_all_labels.isChecked():
-        if self.project_data.data['label_type'] == 'Landmark label':
-            updateLandmarkLabels(self)   
-        if self.project_data.data['label_type'] == 'Mask label':
-            updateMaskLabels(self)
+        
+    if self.project_data.data['label_type'] == 'Landmark label':
+        vtk_actors.addCurrentLandmarkActor(self)
+        if self.checkbox_plot_all_labels.isChecked():
+            updateExistingLandmarkLabels(self)   
+    if self.project_data.data['label_type'] == 'Mask label':
+        vtk_actors.addCurrentMaskLabelActors(self)
+        if self.checkbox_plot_all_labels.isChecked():
+            updateExistingMaskLabels(self)
+            
     self.iren.Initialize()
     self.iren.Start()  
 
-def updateMaskLabels(self):
+def updateExistingMaskLabels(self):
     img_name = self.project_data.getCurrImg()
     label_list = self.project_data.getLabelList(img_name)
     predef_labels = self.project_data.data['predefined_labels']
@@ -254,23 +265,25 @@ def updateMaskLabels(self):
     self.iren.Initialize()
     self.iren.Start()  
  
-def vtk_image_ops(self, vtk_image):
+def vtkChangeImageOperations(self, vtk_image):
     self.img_dims =  vtk_image.GetDimensions()
     self.img_spacing = vtk_image.GetSpacing()
     self.img_orig = vtk_image.GetOrigin()
     self.ren.GetActors().RemoveAllItems()
     
+    self.landmark_pos = []
+    
     if self.project_data.data['label_type'] == 'Landmark label':
         cleanupActorsLandmarkLabel(self)
+        if self.checkbox_plot_all_labels.isChecked():
+            updateExistingLandmarkLabels(self)
+            
     if self.project_data.data['label_type'] == 'Mask label':
         cleanupActorsMaskLabel(self)
-    if self.project_data.data['label_type'] == 'Landmark label' and \
-        self.checkbox_plot_all_labels.isChecked():
-        updateLandmarkLabels(self)
-    if self.project_data.data['label_type'] == 'Mask label' and \
-        self.checkbox_plot_all_labels.isChecked():
-        updateMaskLabels(self)
-        
+        if self.checkbox_plot_all_labels.isChecked():
+            updateExistingMaskLabels(self)
+            
+            
     camera = self.ren.GetActiveCamera()
     camera_pos = computeCamPos(vtk_image.GetOrigin(), vtk_image.GetDimensions(), 
                   vtk_image.GetSpacing(), camera.GetViewAngle())
@@ -282,13 +295,15 @@ def vtk_image_ops(self, vtk_image):
     self.iren.Start()  
     
 def getVTKImage(self, image):
-    image = self.project_data.data["folder_directory"] + image
-    with Image.open(image) as im:
+    image_path = self.project_data.data["folder_directory"] + image
+
+    with Image.open(image_path) as im:
         if self.project_data.data['color_mode'] == "RGB":
             im = im.convert("RGB")
         else:
             im = im.convert("L")
         vtk_image = vpl.image_io.as_vtkimagedata(im, ndim=None)
+
     return vtk_image
 
 
@@ -362,6 +377,7 @@ def updateUINewImage(self):
     updateExistingLabelsList(self)
     updateImageTree(self)
     updateComboboxPredefLabels(self)
+    updateGUIImageList(self)
     # Set list item
     curr_img_name = self.project_data.data['img_list_ordered'][self.project_data.data['img_counter']]
     try: 
@@ -473,7 +489,7 @@ def removePredefinedLabel(self):
     self.parent.project_data.removeLabelByPredef( delete_item_name)
     # Update predef label combobox in main window
     updateComboboxPredefLabels(self.parent)
-    vtk_update_labels(self.parent)
+    updateImageLabelsAfterLabelChange(self.parent)
     
 def changeLabelName(self):
     old_label = self.parent.list_predefined_labels.currentItem().text()
@@ -490,7 +506,7 @@ def changeLabelName(self):
     self.parent.parent.project_data.changeLabel(old_label, new_label)
     # Refresh label list in main window
     updateComboboxPredefLabels(self.parent.parent)
-    vtk_update_labels(self.parent.parent)
+    updateImageLabelsAfterLabelChange(self.parent.parent)
     updateExistingLabelsList(self.parent.parent)
     self.close()
     
@@ -532,13 +548,13 @@ def initLabelSection(self, label_type):
     self.button_edit_predefined_label_list.setSizePolicy(self.sizePolicy)
     self.button_edit_predefined_label_list.hide()
     self.button_remove_label = Qt.QPushButton('Remove label', self)           
-    self.button_remove_label.clicked.connect(partial(removeTextLabel, self))  
+    self.button_remove_label.clicked.connect(partial(removeImageLabel, self))  
     self.button_remove_label.setFixedWidth(200)
     self.button_remove_label.setSizePolicy(self.sizePolicy)
     self.button_remove_label.hide()
     self.checkbox_plot_all_labels = Qt.QCheckBox("Plot all image labels")
     self.checkbox_plot_all_labels.setChecked(True)
-    self.checkbox_plot_all_labels.stateChanged.connect(partial(vtk_update_labels, self))
+    self.checkbox_plot_all_labels.stateChanged.connect(partial(updateImageLabelsAfterLabelChange, self))
     self.checkbox_plot_all_labels.hide()
     
 def initImageSection(self):
@@ -586,16 +602,17 @@ def removeImageFromDataset(self):
     curr_img = self.project_data.getCurrImg()
     self.project_data.removeImage(curr_img)
     
-    updateGUIImageList(self)
+    #updateGUIImageList(self)
     
     # Insert removed image into deleted image list. This way the removed images wont get 
     # re-uploaded when dataset is updated new images
     self.project_data.data['deleted_images'].append(curr_img)
     
+    updateUINewImage(self)
     next_img_name = self.project_data.getCurrImg()
     vtk_image = getVTKImage(self, next_img_name)
-    vtk_image_ops(self, vtk_image)
-    updateUINewImage(self)
+    vtkChangeImageOperations(self, vtk_image)
+    
     
 def saveProject(self):
     # Def path
@@ -634,7 +651,7 @@ def loadProjectContinue(self):
     except: 
         pass
     
-    updateGUIImageList(self)
+    #updateGUIImageList(self)
       
     first_img = self.project_data.data['img_list_ordered'][self.project_data.data['img_counter']]
     
@@ -648,10 +665,11 @@ def loadProjectContinue(self):
 
     # Change text of button
     self.button_choose_image_directory.setText("Update image data")
-
-    vtk_image = getVTKImage(self, first_img)
-    vtk_image_ops(self, vtk_image)
+    
     updateUINewImage(self)
+    vtk_image = getVTKImage(self, first_img)
+    vtkChangeImageOperations(self, vtk_image)
+    
     updateAddLabelButton(self)
     
 def initProject(self):

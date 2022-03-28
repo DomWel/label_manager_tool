@@ -77,47 +77,13 @@ class MyInteractorStyle(vtk.vtkInteractorStyleImage):
             picker.Pick(x, y, 0, self.parent.ren)
             pickerWorld = picker.GetPickPosition()
             self.parent.landmark_pos.append([pickerWorld[0], pickerWorld[1]])
-
-            # Get current preselected label
-            label_combobox = self.parent.combobox_label_selection.currentText()
-            color_rgb = interface.getLabelColor(self.parent.project_data.data['predefined_labels'], 
-                                      self.parent.project_data.data['color_list'], 
-                                      label_combobox)
             
             if self.parent.project_data.data['label_type'] == 'Landmark label':
-                self.parent.captionActor.SetCaption('New label: ' + label_combobox)
-                self.parent.captionActor.SetAttachmentPoint(pickerWorld[0], pickerWorld[1], 0)
-                self.parent.captionActor.SetVisibility(True)
-                self.parent.captionActor.GetCaptionTextProperty().SetColor(color_rgb)
-                self.parent.ren.AddActor(self.parent.captionActor)
+                vtk_actors.addCurrentLandmarkActor(self.parent)
                 
             elif self.parent.project_data.data['label_type'] == 'Mask label':
-                idx = len(self.parent.landmark_pos)
-                # Create caption if click marked the first point of mask label
-                if idx == 1:
-                    self.parent.captionActor.SetCaption('New label: ' + label_combobox)
-                    self.parent.captionActor.GetCaptionTextProperty().SetColor(color_rgb)
-                    self.parent.captionActor.SetVisibility(True)
-                    self.parent.captionActor.SetAttachmentPoint(pickerWorld[0], pickerWorld[1], 0)
-                    self.parent.ren.AddActor(self.parent.captionActor)
-                
-                # Load line actor with new data
-                polyDataLines = vtk_actors.createLinesPolydata(self.parent.landmark_pos)
-                self.parent.mapper_lines.SetInputData(polyDataLines)
-                
-                # Load glyph2d actors with new data
-                polydata_labels = vtk_actors.createPointsPolydata(self.parent.landmark_pos)
-                self.parent.glyph2D.SetInputData(polydata_labels)
-                
-                # Adjust color and make actors visible
-                self.parent.current_line_actor.GetProperty().SetColor(color_rgb)
-                self.parent.current_line_actor.SetVisibility(True)
-                self.parent.ren.AddActor(self.parent.current_line_actor)
-                
-                self.parent.current_glyph_actor.GetProperty().SetColor(color_rgb)
-                self.parent.current_glyph_actor.SetVisibility(True)
-                self.parent.ren.AddActor(self.parent.current_glyph_actor)
-            
+                vtk_actors.addCurrentMaskLabelActors(self.parent)
+
             self.parent.iren.Initialize()
             self.parent.iren.Start()    
             

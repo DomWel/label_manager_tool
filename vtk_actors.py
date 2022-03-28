@@ -97,3 +97,51 @@ def createGlyphActor(visibility=True, radius=1, number_of_sides=200):
     current_glyph_actor = vtk.vtkActor()
     current_glyph_actor.SetMapper(mapper_glyph)
     return current_glyph_actor, glyph2D
+
+
+def addCurrentMaskLabelActors(self):
+    # Current mask label =  Caption actor + Glyph actor + Lines Actor!
+    if len(self.landmark_pos) > 0: 
+        label_combobox = self.combobox_label_selection.currentText()
+        color_rgb = getLabelColor(self.project_data.data['predefined_labels'], 
+                                  self.project_data.data['color_list'], 
+                                  label_combobox)
+        
+        self.ren.RemoveActor(self.captionActor)
+        self.captionActor.SetCaption('New label: ' + label_combobox)
+        self.captionActor.GetCaptionTextProperty().SetColor(color_rgb)
+        self.captionActor.SetVisibility(True)
+        self.captionActor.SetAttachmentPoint(self.landmark_pos[0][0], self.landmark_pos[0][1], 0)
+        self.ren.AddActor(self.captionActor)
+        
+        # Load line actor with new data
+        polyDataLines = createLinesPolydata(self.landmark_pos)
+        self.mapper_lines.SetInputData(polyDataLines)
+        
+        # Load glyph2d actors with new data
+        polydata_labels = createPointsPolydata(self.landmark_pos)
+        self.glyph2D.SetInputData(polydata_labels)
+        
+        # Adjust color and make actors visible
+        self.current_line_actor.GetProperty().SetColor(color_rgb)
+        self.current_line_actor.SetVisibility(True)
+        self.ren.AddActor(self.current_line_actor)
+        
+        self.current_glyph_actor.GetProperty().SetColor(color_rgb)
+        self.current_glyph_actor.SetVisibility(True)
+        self.ren.AddActor(self.current_glyph_actor)
+
+def addCurrentLandmarkActor(self):
+    # Current landmark acotr = Caption actor
+    if len(self.landmark_pos) > 0: 
+        label_combobox = self.combobox_label_selection.currentText()
+        color_rgb = getLabelColor(self.project_data.data['predefined_labels'], 
+                                  self.project_data.data['color_list'], 
+                                  label_combobox)
+        
+        if self.project_data.data['label_type'] == 'Landmark label':
+            self.captionActor.SetCaption('New label: ' + label_combobox)
+            self.captionActor.SetAttachmentPoint(self.landmark_pos[-1][0], self.landmark_pos[-1][1], 0)
+            self.captionActor.SetVisibility(True)
+            self.captionActor.GetCaptionTextProperty().SetColor(color_rgb)
+            self.ren.AddActor(self.captionActor)
