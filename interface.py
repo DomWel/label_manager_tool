@@ -27,6 +27,7 @@ def createProj(self):
     self.parent.project_data = project_data()
     self.parent.project_data.data['project_name'] = self.line_edit_proj_name.text()
     self.parent.project_data.data['label_type'] = self.combobox_label_selection.currentText()
+    print("Combobox: ", self.combobox_label_selection.currentText())
     self.parent.project_data.data['color_mode'] = self.combobox_image_channels.currentText()
     
     #Create Project Database
@@ -568,7 +569,7 @@ def initLabelSection(self, label_type):
     self.button_create_label.setFixedWidth(200)
     self.button_create_label.setSizePolicy(self.sizePolicy)
     self.button_create_label.hide()
-    self.button_edit_predefined_label_list = Qt.QPushButton('Edit predefined label list', self)  
+    self.button_edit_predefined_label_list = Qt.QPushButton('Edit label class list', self)  
     self.button_edit_predefined_label_list.clicked.connect(self.editPredefLabels)  
     self.button_edit_predefined_label_list.setFixedWidth(200)
     self.button_edit_predefined_label_list.setSizePolicy(self.sizePolicy)
@@ -774,9 +775,9 @@ def initNewProjDiag(self):
     self.button_create_project.clicked.connect(partial(createProj, self))  
     
     self.label_enter_predefined_text_label = Qt.QLabel()
-    self.label_enter_predefined_text_label.setText("Predefined labels: ")
+    self.label_enter_predefined_text_label.setText("Label classes: ")
     
-    self.button_add_predefined_text_label = Qt.QPushButton('Add predefined label', self) 
+    self.button_add_predefined_text_label = Qt.QPushButton('Add new label class', self) 
     self.button_add_predefined_text_label.clicked.connect(partial(addLabelToPredefinedLabelsNewProj, self)) 
     self.line_edit_predefined_label_name = Qt.QLineEdit()
     
@@ -803,11 +804,11 @@ def initNewProjDiag(self):
     
 def initChangePreselectLabelName(self):
     self.label_change_label_name = Qt.QLabel()
-    self.label_change_label_name.setText("New name for predefined label: ")
+    self.label_change_label_name.setText("New name for selected class label: ")
     
     self.line_edit_new_label_name = Qt.QLineEdit()
     
-    self.button_change_label_name = Qt.QPushButton('Change label name', self)  
+    self.button_change_label_name = Qt.QPushButton('Change label class name', self)  
     self.button_change_label_name.clicked.connect(partial(changeLabelName, self))  
     
     self.change_label_name_grid = Qt.QGridLayout()  
@@ -817,11 +818,11 @@ def initChangePreselectLabelName(self):
 
 def initPredefinedLabelsEditMenu(self):
     self.label_list_predefined_labels = Qt.QLabel()
-    self.label_list_predefined_labels.setText("Predefined labels: ")
+    self.label_list_predefined_labels.setText("Label class list: ")
     
     self.line_edit_new_predefined_label_name = Qt.QLineEdit()
     
-    self.button_add_predefined_text_label = Qt.QPushButton('Add pre-defined label', self) 
+    self.button_add_predefined_text_label = Qt.QPushButton('Add label class', self) 
     self.button_add_predefined_text_label.clicked.connect(partial(addLabelToPredefinedLabelsEditPredef, self)) 
    
     self.button_remove_predefined_text_label = Qt.QPushButton('Remove', self) 
