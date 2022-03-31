@@ -354,6 +354,7 @@ def updateComboboxPredefLabels(self):
 
 def updateExistingLabelsList(self):
     img_name = self.project_data.getCurrImg()
+    print("img name of curr img: ", img_name)
     self.list_existing_labels.clear()
     for label_dict in self.project_data.getLabelList(img_name):        
         #Create colored ◼-item
@@ -709,8 +710,10 @@ def correctImageDirectory(self):
     self.close()
     
 def changeImageDirectory(self, name):
-    folder_dir = Qt.QFileDialog.getExistingDirectory(self, 'Select correct image directory', 'c:\\')   
-    print(folder_dir)
+    folder_dir = Qt.QFileDialog.getExistingDirectory(self, 'Select correct image directory', 'c:\\')  
+    
+    self.check_img_src_2_label.setText(folder_dir)
+    
     self.parent.project_data.data["folder_directory"] = folder_dir + "/"
   
     

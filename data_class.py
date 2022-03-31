@@ -74,6 +74,8 @@ class project_data():
         with open(project_path_name, 'r') as f:
           data = json.load(f)
           self.data = data
+        
+        self.data['img_list_ordered'] = sorted(self.getImageList())
           
     def getLabelList(self, img_name):
         img_dict = self.data['images'][img_name]

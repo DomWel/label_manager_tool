@@ -18,7 +18,8 @@ def exportMaskDatasetAsNumpyArray(directory_path, project_data, training_test_ra
     print('Total number labeled images: ', total_number_labeled_images)
     counter = 0
 
-    for img_key in project_data.data['images']:
+    #for img_key in project_data.data['images']:
+    for img_key in project_data.data['img_list_ordered']:
         if len(project_data.data['images'][img_key]['labels']) >= min_labels:  
             counter = counter + 1
             sample_ID = 'ID' + str(counter) + '.png'
@@ -29,9 +30,11 @@ def exportMaskDatasetAsNumpyArray(directory_path, project_data, training_test_ra
             
             if float(counter) / float(total_number_labeled_images) < training_test_ratio:
                 partition_dict['train'].append(sample_ID)
+                
             else:
                 partition_dict['validation'].append(sample_ID)
                 
+            
             
             list_all_masks = []
             for index, label in enumerate(project_data.data['images'][img_key]['labels'], start=1):
