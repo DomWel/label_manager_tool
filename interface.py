@@ -27,7 +27,6 @@ def createProj(self):
     self.parent.project_data = project_data()
     self.parent.project_data.data['project_name'] = self.line_edit_proj_name.text()
     self.parent.project_data.data['label_type'] = self.combobox_label_selection.currentText()
-    print("Combobox: ", self.combobox_label_selection.currentText())
     self.parent.project_data.data['color_mode'] = self.combobox_image_channels.currentText()
     
     #Create Project Database
@@ -95,29 +94,34 @@ def loadImageData(self):
 def addLabelToImage(self):
     label_combobox = self.combobox_label_selection.currentText()
     
-    img_name = self.project_data.getCurrImg()
-    if self.project_data.data['label_type'] != "Text label":
-        coords = self.landmark_pos
-        self.project_data.addLabel(label_combobox, img_name, coords)
-    else: 
-        self.project_data.addLabel(label_combobox, img_name)
+    if label_combobox != "":
+        img_name = self.project_data.getCurrImg()
+        if self.project_data.data['label_type'] != "Text label":
+            coords = self.landmark_pos
+            self.project_data.addLabel(label_combobox, img_name, coords)
+        else: 
+            self.project_data.addLabel(label_combobox, img_name)
+        
+        self.landmark_pos = []
     
-    self.landmark_pos = []
+        #Update GUI
+        updateGUIImageList(self)
+        updateUINewImage(self)
+        updateImageLabelsAfterLabelChange(self)
 
-    #Update GUI
-    updateGUIImageList(self)
-    updateUINewImage(self)
-    updateImageLabelsAfterLabelChange(self)
     
 def removeImageLabel(self):
-    label_id = self.list_existing_labels.currentItem().value
-    img_name = self.project_data.getCurrImg()
-    self.project_data.removeLabelById(img_name, label_id)
-    
-    #Update GUI
-    #updateGUIImageList(self)
-    updateUINewImage(self)
-    updateImageLabelsAfterLabelChange(self)
+    try:
+        label_id = self.list_existing_labels.currentItem().value
+        img_name = self.project_data.getCurrImg()
+        self.project_data.removeLabelById(img_name, label_id)
+        
+        #Update GUI
+        #updateGUIImageList(self)
+        updateUINewImage(self)
+        updateImageLabelsAfterLabelChange(self)
+    except:
+        print("Select image label!!!")
     
 
 def show_selected_img(self):
@@ -203,7 +207,6 @@ def initActorsMaskLabel(self):
     self.landmark_pos = []
 
 def cleanupActorsMaskLabel(self):
-    
     self.ren.RemoveActor(self.captionActor)
     self.ren.RemoveActor(self.current_line_actor)
     self.ren.RemoveActor(self.current_glyph_actor)
@@ -354,7 +357,6 @@ def updateComboboxPredefLabels(self):
 
 def updateExistingLabelsList(self):
     img_name = self.project_data.getCurrImg()
-    print("img name of curr img: ", img_name)
     self.list_existing_labels.clear()
     for label_dict in self.project_data.getLabelList(img_name):        
         #Create colored ◼-item
@@ -374,51 +376,22 @@ def updateExistingLabelsList(self):
         item.value = label_dict['label_id']
         self.list_existing_labels.addItem(item)   
            
-
 def updateUINewImage(self):
     # Set label section
-    tic1 = time.time()
     updateExistingLabelsList(self)
-    tic2 = time.time()
     updateImageTree(self)
-    tic3 = time.time()
     updateComboboxPredefLabels(self)
-    tic4 = time.time()
     updateGUIImageList(self)
-    
-    
-
     
     # Set list item
     curr_img_name = self.project_data.data['img_list_ordered'][self.project_data.data['img_counter']]
-    """
-    try: 
-        items = self.list_img_names.findItems(curr_img_name, QtCore.Qt.MatchExactly)
-        self.list_img_names.setCurrentItem( items[0] )
-    except: 
-        items = self.list_img_names.findItems("✘" + curr_img_name, QtCore.Qt.MatchExactly)
-        self.list_img_names.setCurrentItem( items[0] )
-    """
-    tic5 = time.time()
     self.list_img_names.setCurrentRow( self.project_data.data['img_counter'] )
-    
-    tic6 = time.time()
     
     if curr_img_name in self.project_data.data["expert_review_list"]:
         self.checkbox_expert_review.setChecked(True)
     else: 
         self.checkbox_expert_review.setChecked(False)
     
-    tic7 = time.time()
-    
-    print("UpdateExistingLabelList: ", tic2 - tic1)
-    print("updateImageTree: ", tic3 - tic2)
-    print("updateComboboxPredefLabels: ", tic4 - tic3)
-    print("updateGUIImageList: ", tic5 - tic4)
-    print("Set current row: ", tic6 - tic5)
-    print("Expert review: ", tic7 - tic6)
-    print("----------------------")
-
 def updateImageTree(self):
     items = []
     item_labeled_img = Qt.QTreeWidgetItem(['Labeled image data'])
