@@ -7,7 +7,7 @@ from PIL import Image
 import vtkplotlib as vpl
 # Project files
 import vtk_actors
-from helper_functions import getLabelColor, computeCamPos, getEmptyImage
+from helper_functions import getLabelColor, computeCamPos, getEmptyImage, HTMLDelegate
 from data_class import project_data
 from export_dataset import exportLandmarkDataset, exportMaskDatasetAsNumpyArray, exportTextLabelDataset
 import time
@@ -910,43 +910,5 @@ def initUI(self):
     self.hl_main.addWidget(self.vtkWidget, stretch=2)
     
 
-class HTMLDelegate(QtWidgets.QStyledItemDelegate):
-    """ This class is used as HTML delegate in the image label list. This way a colored box can 
-    be placed next to the label. """
-    def __init__(self, parent=None):
-        super(HTMLDelegate, self).__init__(parent)
-        self.doc = QtGui.QTextDocument(self)
-
-    def paint(self, painter, option, index):
-        painter.save()
-        options = QtWidgets.QStyleOptionViewItem(option)
-        self.initStyleOption(options, index)
-        self.doc.setHtml(options.text)
-        options.text = ""
-        style = QtWidgets.QApplication.style() if options.widget is None \
-            else options.widget.style()
-        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
-
-        ctx = QtGui.QAbstractTextDocumentLayout.PaintContext()
-        if option.state & QtWidgets.QStyle.State_Selected:
-            ctx.palette.setColor(QtGui.QPalette.Text, option.palette.color(
-                QtGui.QPalette.Active, QtGui.QPalette.HighlightedText))
-        else:
-            ctx.palette.setColor(QtGui.QPalette.Text, option.palette.color(
-                QtGui.QPalette.Active, QtGui.QPalette.Text))
-        textRect = style.subElementRect(QtWidgets.QStyle.SE_ItemViewItemText, options, None)
-        if index.column() != 0:
-            textRect.adjust(5, 0, 0, 0)
-        constant = 4
-        margin = (option.rect.height() - options.fontMetrics.height()) // 2
-        margin = margin - constant
-        textRect.setTop(textRect.top() + margin)
-
-        painter.translate(textRect.topLeft())
-        painter.setClipRect(textRect.translated(-textRect.topLeft()))
-        self.doc.documentLayout().draw(painter, ctx)
-        painter.restore()
-
-    def sizeHint(self, option, index):
-        return QtCore.QSize(self.doc.idealWidth(), self.doc.size().height())    
+  
         

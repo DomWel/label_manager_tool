@@ -57,8 +57,6 @@ class MainWindow(Qt.QMainWindow):
         self.load_project_menu = LoadProjectMenu(parent=self)
         self.load_project_menu.show()
 
-
-
 if __name__ == "__main__":
     app = Qt.QApplication(sys.argv)
     window = MainWindow()
